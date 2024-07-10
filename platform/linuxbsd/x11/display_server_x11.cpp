@@ -2181,20 +2181,22 @@ Point2i DisplayServerX11::window_get_position_with_decorations(WindowID p_window
 	XGetWindowAttributes(x11_display, wd.x11_window, &xwa);
 	int x = wd.position.x;
 	int y = wd.position.y;
-	Atom prop = XInternAtom(x11_display, "_NET_FRAME_EXTENTS", True);
-	if (prop != None) {
-		Atom type;
-		int format;
-		unsigned long len;
-		unsigned long remaining;
-		unsigned char *data = nullptr;
-		if (XGetWindowProperty(x11_display, wd.x11_window, prop, 0, 4, False, AnyPropertyType, &type, &format, &len, &remaining, &data) == Success) {
-			if (format == 32 && len == 4 && data) {
-				long *extents = (long *)data;
-				x -= extents[0]; // left
-				y -= extents[2]; // top
+	if (!window_get_flag(WINDOW_FLAG_BORDERLESS, p_window)) {
+		Atom prop = XInternAtom(x11_display, "_NET_FRAME_EXTENTS", True);
+		if (prop != None) {
+			Atom type;
+			int format;
+			unsigned long len;
+			unsigned long remaining;
+			unsigned char *data = nullptr;
+			if (XGetWindowProperty(x11_display, wd.x11_window, prop, 0, 4, False, AnyPropertyType, &type, &format, &len, &remaining, &data) == Success) {
+				if (format == 32 && len == 4 && data) {
+					long *extents = (long *)data;
+					x -= extents[0]; // left
+					y -= extents[2]; // top
+				}
+				XFree(data);
 			}
-			XFree(data);
 		}
 	}
 	return Size2i(x, y);
@@ -2361,20 +2363,22 @@ Size2i DisplayServerX11::window_get_size_with_decorations(WindowID p_window) con
 	XGetWindowAttributes(x11_display, wd.x11_window, &xwa);
 	int w = xwa.width;
 	int h = xwa.height;
-	Atom prop = XInternAtom(x11_display, "_NET_FRAME_EXTENTS", True);
-	if (prop != None) {
-		Atom type;
-		int format;
-		unsigned long len;
-		unsigned long remaining;
-		unsigned char *data = nullptr;
-		if (XGetWindowProperty(x11_display, wd.x11_window, prop, 0, 4, False, AnyPropertyType, &type, &format, &len, &remaining, &data) == Success) {
-			if (format == 32 && len == 4 && data) {
-				long *extents = (long *)data;
-				w += extents[0] + extents[1]; // left, right
-				h += extents[2] + extents[3]; // top, bottom
+	if (!window_get_flag(WINDOW_FLAG_BORDERLESS, p_window)) {
+		Atom prop = XInternAtom(x11_display, "_NET_FRAME_EXTENTS", True);
+		if (prop != None) {
+			Atom type;
+			int format;
+			unsigned long len;
+			unsigned long remaining;
+			unsigned char *data = nullptr;
+			if (XGetWindowProperty(x11_display, wd.x11_window, prop, 0, 4, False, AnyPropertyType, &type, &format, &len, &remaining, &data) == Success) {
+				if (format == 32 && len == 4 && data) {
+					long *extents = (long *)data;
+					w += extents[0] + extents[1]; // left, right
+					h += extents[2] + extents[3]; // top, bottom
+				}
+				XFree(data);
 			}
-			XFree(data);
 		}
 	}
 	return Size2i(w, h);
@@ -5700,11 +5704,11 @@ DisplayServerX11::WindowID DisplayServerX11::_create_window(WindowMode p_mode, V
 
 		if (wd.is_popup || wd.no_focus) {
 			// Set Utility type to disable fade animations.
-			Atom type_atom = XInternAtom(x11_display, "_NET_WM_WINDOW_TYPE_UTILITY", False);
-			Atom wt_atom = XInternAtom(x11_display, "_NET_WM_WINDOW_TYPE", False);
-			if (wt_atom != None && type_atom != None) {
-				XChangeProperty(x11_display, wd.x11_window, wt_atom, XA_ATOM, 32, PropModeReplace, (unsigned char *)&type_atom, 1);
-			}
+			// Atom type_atom = XInternAtom(x11_display, "_NET_WM_WINDOW_TYPE_UTILITY", False);
+			// Atom wt_atom = XInternAtom(x11_display, "_NET_WM_WINDOW_TYPE", False);
+			// if (wt_atom != None && type_atom != None) {
+			// 	XChangeProperty(x11_display, wd.x11_window, wt_atom, XA_ATOM, 32, PropModeReplace, (unsigned char *)&type_atom, 1);
+			// }
 		} else {
 			Atom type_atom = XInternAtom(x11_display, "_NET_WM_WINDOW_TYPE_NORMAL", False);
 			Atom wt_atom = XInternAtom(x11_display, "_NET_WM_WINDOW_TYPE", False);
